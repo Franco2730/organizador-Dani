@@ -1,5 +1,4 @@
 import React from 'react';
-import './InitialTasks.css';
 
 const InitialTasks = ({ tasks, onStatusChange, onArchive }) => {
     return (

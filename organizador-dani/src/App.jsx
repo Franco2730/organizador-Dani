@@ -5,12 +5,14 @@ import InitialTasks from './InitialTasks/InitialTasks';
 import InProgressTasks from './InProgressTasks/InProgressTasks';
 import CompletedTasks from './CompletedTasks/CompletedTasks';
 import ArchivedTasks from './ArchivedTasks/ArchivedTasks';
+import WelcomeModal from './WelcomeModal';
 import './App.css';
 import axios from 'axios';
 
 const App = () => {
     const [tasks, setTasks] = useState([]);
     const [archivedTasks, setArchivedTasks] = useState([]);
+    const [showModal, setShowModal] = useState(true);
 
     const fetchTasks = async () => {
         try {
@@ -47,7 +49,7 @@ const App = () => {
     const handleStatusChange = async (id, status) => {
         try {
             await axios.put(`http://localhost:5000/tasks/${id}`, { status });
-            fetchTasks(); // Refetch tasks after update
+            fetchTasks();
         } catch (error) {
             console.error('Error updating task status:', error);
         }
@@ -56,8 +58,8 @@ const App = () => {
     const handleArchiveTask = async (id) => {
         try {
             await axios.put(`http://localhost:5000/tasks/${id}`, { status: 'archived' });
-            fetchTasks(); // Refetch tasks after archiving
-            fetchArchivedTasks(); // Refetch archived tasks after archiving
+            fetchTasks();
+            fetchArchivedTasks();
         } catch (error) {
             console.error('Error archiving task:', error);
         }
@@ -66,16 +68,22 @@ const App = () => {
     const handleDeleteArchivedTask = async (id) => {
         try {
             await axios.delete(`http://localhost:5000/tasks/${id}`);
-            fetchArchivedTasks(); // Refetch archived tasks after deletion
+            fetchArchivedTasks();
         } catch (error) {
             console.error('Error deleting archived task:', error);
         }
     };
 
+    const closeModal = () => {
+        setShowModal(false);
+    };
+
     return (
         <Router>
-            <div className="app-container">
-                <nav>
+            <div>
+                {showModal && <WelcomeModal onClose={closeModal} />}
+                <nav className="navbar">
+                    <h1>Organi Yépez</h1>
                     <ul>
                         <li><Link to="/">Home</Link></li>
                         <li><Link to="/in-progress">Tareas en Proceso</Link></li>
@@ -83,14 +91,18 @@ const App = () => {
                         <li><Link to="/archived">Tareas Archivadas</Link></li>
                     </ul>
                 </nav>
-                <TaskList onTaskAdded={addTask} />
-                <div className="task-cards-container">
-                    <Routes>
-                        <Route path="/in-progress" element={<InProgressTasks tasks={tasks.filter(task => task.status === 'in progress')} onStatusChange={handleStatusChange} onArchiveTask={handleArchiveTask} />} />
-                        <Route path="/completed" element={<CompletedTasks tasks={tasks.filter(task => task.status === 'completed')} onArchiveTask={handleArchiveTask} />} />
-                        <Route path="/archived" element={<ArchivedTasks tasks={archivedTasks} onDeleteArchivedTask={handleDeleteArchivedTask} />} />
-                        <Route path="/" element={<InitialTasks tasks={tasks.filter(task => task.status === 'pending')} onStatusChange={handleStatusChange} onArchiveTask={handleArchiveTask} />} />
-                    </Routes>
+                <div className="container">
+                    <div className="task-form-container">
+                        <TaskList onTaskAdded={addTask} />
+                    </div>
+                    <div className="task-cards-container">
+                        <Routes>
+                            <Route path="/in-progress" element={<InProgressTasks tasks={tasks.filter(task => task.status === 'in progress')} onStatusChange={handleStatusChange} onArchiveTask={handleArchiveTask} />} />
+                            <Route path="/completed" element={<CompletedTasks tasks={tasks.filter(task => task.status === 'completed')} onArchiveTask={handleArchiveTask} />} />
+                            <Route path="/archived" element={<ArchivedTasks tasks={archivedTasks} onDeleteArchivedTask={handleDeleteArchivedTask} />} />
+                            <Route path="/" element={<InitialTasks tasks={tasks.filter(task => task.status === 'pending')} onStatusChange={handleStatusChange} onArchive={handleArchiveTask} />} />
+                        </Routes>
+                    </div>
                 </div>
             </div>
         </Router>
